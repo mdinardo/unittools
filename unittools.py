@@ -118,6 +118,12 @@ class UnitVar:
 
     def cm(self):
         return cm(self)
+    
+    def __pos__(self):
+        return self
+    
+    def __neg__(self):
+        return UnitVar( - self.value, self.unit)
 
     def __add__(self, y):
         if _is_number(y):
