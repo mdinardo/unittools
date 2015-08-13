@@ -33,7 +33,7 @@ def _is_unit(u):
     return isinstance(u, UnitVar)
 
 def __converter(func):
-    def create_or_convert(x):
+    def create_or_convert(x = 1):
         unit, conversions = func(x)
         if _is_number(x):
             return UnitVar(x, unit)
@@ -145,11 +145,11 @@ class UnitVar:
 
     def __mul__(self, y):
         if _is_number(y):
-            return Unit(self.value * y, self.unit)
+            return UnitVar(self.value * y, self.unit)
 
     def __rmul__(self, x):
         if _is_number(x):
-            return Unit(x * self.value, self.unit)
+            return UnitVar(x * self.value, self.unit)
 
     def __div__(self, y):
         if _is_number(y):
@@ -157,12 +157,12 @@ class UnitVar:
                 raise ZeroDivisionError('Cannot divide UnitVar by a constant value of zero')
             
             else:
-                return Unit(self.value / y, self.unit)
+                return UnitVar(self.value / y, self.unit)
 
     def __rdiv__(self, x):
         if _is_number(x):
             if 0 == x:
                 raise ZeroDivisionError('Cannot divide constant by a UnitVar with a magnitude of zero')
             else:
-                return Unit(x / self.value, self.unit)
+                return UnitVar(x / self.value, self.unit)
 
