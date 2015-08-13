@@ -1,3 +1,5 @@
+from exceptions import TypeError, ZeroDivisionError
+
 # units
 MIL = 'mil'
 IN = 'in'
@@ -140,3 +142,27 @@ class UnitVar:
     def __rsub__(self, x):
         if _is_number(x):
             return UnitVar(x - self.value, self.unit)
+
+    def __mul__(self, y):
+        if _is_number(y):
+            return Unit(self.value * y, self.unit)
+
+    def __rmul__(self, x):
+        if _is_number(x):
+            return Unit(x * self.value, self.unit)
+
+    def __div__(self, y):
+        if _is_number(y):
+            if 0 == y:
+                raise ZeroDivisionError('Cannot divide UnitVar by a constant value of zero')
+            
+            else:
+                return Unit(self.value / y, self.unit)
+
+    def __rdiv__(self, x):
+        if _is_number(x):
+            if 0 == x:
+                raise ZeroDivisionError('Cannot divide constant by a UnitVar with a magnitude of zero')
+            else:
+                return Unit(x / self.value, self.unit)
+
