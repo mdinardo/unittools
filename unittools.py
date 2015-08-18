@@ -1,174 +1,227 @@
 from exceptions import TypeError, ZeroDivisionError
 
-# units
-MIL = 'mil'
-IN = 'in'
-MM = 'mm'
-CM = 'cm'
-
-# mils conversion factors
-MIL2IN = 0.001
-MIL2MM = 0.0254
-MIL2CM = 0.00254 
-
-# inch conversion factors
-IN2MIL = 1000
-IN2MM = 25.4
-IN2CM = 2.54
-
-# millimeter conversion factors
-MM2MIL = (1 / 0.0254)
-MM2IN = (1 / 25.4)
-MM2CM = 0.1
-
-# centimeter conversion factors
-CM2MIL = (1 / 0.00254)
-CM2IN = (1 / 2.54)
-CM2MM = 10
-
-def _is_number(u):
-    return isinstance(u, (int, float))
-
-def _is_unit(u):
-    return isinstance(u, UnitVar)
-
-def __converter(func):
-    def create_or_convert(x = 1):
-        unit, conversions = func(x)
-        if _is_number(x):
-            return UnitVar(x, unit)
-        elif _is_unit(x):
-            return UnitVar(x.value * conversions[x.unit], unit)
-    return create_or_convert
-
-@__converter
-def mil(x):
-    conversions = {
+# factors are in a from-to format
+FACTORS = {
+    # mils conversion factors
+    MIL : {
+        IN : 0.001,
+        MM : 0.0254,
+        CM : 0.00254,
         MIL : 1.0,
-        IN : IN2MIL,
-        MM : MM2MIL,
-        CM : CM2MIL
-    }
-    return (MIL, conversions)  
-
-@__converter
-def inch(x):
-    conversions = {
-        MIL : MIL2IN,
+    } ,
+    # inch conversion factors
+    IN : {
+        MIL : 1000,
+        MM : 25.4,
+        CM : 2.54,
         IN : 1.0,
-        MM : MM2IN,
-        CM : CM2IN
-    }
-    return (IN, conversions)
-
-@__converter
-def mm(x):
-    conversions = {
-        MIL : MIL2MM,
-        IN : IN2MM,
+    } ,
+    # millimeter conversion factors
+    MM : {
+        MIL : (1 / 0.0254),
+        IN : (1 / 25.4),
+        CM : 0.1,
         MM : 1.0,
-        CM : CM2MM
+    } ,
+    # centimeter conversion factors
+    CM : {
+        MIL : (1 / 0.00254),
+        IN : (1 / 2.54),
+        MM : 10,
+        CM : 1.0,
     }
-    return (MM, conversions)
-
-@__converter
-def cm(x):
-    conversions = {
-        MIL : MIL2CM,
-        IN : IN2CM,
-        MM : MM2CM,
-        CM : 1.0
-    }
-    return (CM, conversions)
-
-# maps a unit to a converter to that unit
-CONVERTERS = {
-    MIL : mil,
-    IN : inch,
-    MM : mm,
-    CM : cm
 }
 
-class UnitVar:
+#########################################
+
+def mil(x = 1):
+    return UnitVar(x, MIL)
+
+def inch(x = 1):
+    return UnitVar(x, IN)
+
+def mm(x = 1):
+    return UnitVar(x, MM)
+
+def cm(x = 1):
+    return UnitVar(x, CM)
+
+##########################################
+
+class UnitVar(object):
     
     def __init__(self, value, unit):
         if _is_number(value):
-            self.value = value
-            self.unit = unit
+            self.value = float(value)
+            self.__unit = unit
+        elif _is_UnitVar(value):
+            # copy data from other UnitVar
+            self.__unit = __unit
+            self.__value = value.__value
+            # Transform to new unit
+            self._transform(value.unit)
 
-        elif UnitVar._is_unit(value):
-            pass
+    @property
+    def unit(self):
+        return self.__unit
     
+    @property
+    def value(self):
+        return self.__value
+    
+    @value.setter
+    def value(self, value):
+        if _is_number(value):
+            self.__value = value
+            self.__value = value
+
     def __str__(self):
         return self.format(fmt='{0}{1}')
     
     def format(self, fmt=None):
         if fmt == None: 
             fmt = '{0}{1}'
-        return fmt.format(self.value, self.unit)
-
-    def mil(self):
-        return mil(self)
-
-    def inch(self):
-        return inch(self)
-
-    def mm(self):
-        return mm(self)
-
-    def cm(self):
-        return cm(self)
+        return fmt.format(self.__value, self.__unit)
     
+    @staticmethod
+    def _is_number(u):
+        return isinstance(u, (int, float))
+
+    @staticmethod
+    def _is_UnitVar(u):
+        return isinstance(u, UnitVar)
+
+    """
+    Transforms this UnitVar instance into the specified unit 'to_unit'
+
+    This instance is returned to enable method chaining.
+    """
+    def _transform(self, to_unit):
+        self.value = self.__value * FACTORS[ self.__unit ][ to_unit ]
+        self.__unit = to_unit
+        return self
+
+    def to_mil(self):
+        """
+        Transforms this instance to mils.
+        """
+        return self._transform(MIL)
+    
+    def to_inch(self):
+        """
+        Transforms this instance to inches.
+        """
+        return self._transform(IN)
+    
+    def to_mm(self):
+        """
+        Transforms this instance to millimeters.
+        """
+        return self._transform(MM)
+    
+    def to_cm(self):
+        """
+        Transforms this instance to centimeters.
+        """
+        return self._transform(CM)
+    
+    ########################
+   
+    def _convert(self, to_unit):
+        """
+        Creates a new instance form this instance that is in the specified unit 'to_unit'
+        """
+        return UnitVar(self, to_unit)
+
+    def mil(self, x):
+        """
+        Creates a new UnitVar instance with this instance's value converted to mils.
+        """
+        return self._convert(MIL)
+
+    def inch(self, x):
+        """
+        Creates a new UnitVar instance with this instance's value converted to inches.
+        """
+        return self._convert(INCH)
+
+    def mm(self, x):
+        """
+        Creates a new UnitVar instance with this instance's value converted to millimeters.
+        """
+        return self._convert(MM)
+
+    def cm(self, x):
+        """
+        Creates a new UnitVar instance with this instance's value converted to centimeters.
+        """
+        return self._convert(CM)
+   
+    ######################################
+
     def __pos__(self):
         return self
     
     def __neg__(self):
-        return UnitVar( - self.value, self.unit)
+        return UnitVar( - self.__value, self.__unit)
 
     def __add__(self, y):
-        if _is_number(y):
-            return UnitVar(self.value + y, self.unit)
-        elif _is_unit(y):
-            c = CONVERTERS[self.unit]
-            y = c(y)
-            return UnitVar(self.value + y.value, self.unit)
+        z = None
+        if self._is_number(y):
+            return UnitVar(self.value + y, self.__unit)
+        elif self._is_UnitVar(y):
+            z = y._convert(self.__unit)
+            z.__value += self.__value
+        return z
 
     def __radd__(self, x):
-        if _is_number(x):
-            return UnitVar(x + self.value, self.unit)
+        z = None
+        if self._is_number(x):
+            z = UnitVar(x + self.value, self.__unit)
+        return z
 
     def __sub__(self, y):
-        if _is_number(y):
-            return UnitVar(self.value - y, self.unit)
-        elif _is_unit(y):
-            c = CONVERTERS[self.unit]
-            y = c(y)
-            return UnitVar(self.value - y.value, self.unit)
+        z = None
+        if self._is_number(y):
+            z = UnitVar(self.value - y, self.__unit)
+        elif self._is_UnitVar(y):
+            z = y._convert(self.__unit)
+            z.__value -= self.__value
+        return z
 
     def __rsub__(self, x):
-        if _is_number(x):
-            return UnitVar(x - self.value, self.unit)
+        z = None
+        if self._is_number(x):
+            z = UnitVar(x - self.value, self.__unit)
+        return z
 
     def __mul__(self, y):
-        if _is_number(y):
-            return UnitVar(self.value * y, self.unit)
+        z = None
+        if self._is_number(y):
+            z = UnitVar(self.value * y, self.__unit)
+        return z
 
     def __rmul__(self, x):
-        if _is_number(x):
-            return UnitVar(x * self.value, self.unit)
+        z = None
+        if self._is_number(x):
+            z = UnitVar(x * self.value, self.__unit)
+        return z
 
     def __div__(self, y):
-        if _is_number(y):
+        z = None
+        if self._is_number(y):
             if 0 == y:
                 raise ZeroDivisionError('Cannot divide UnitVar by a constant value of zero')
             
             else:
-                return UnitVar(self.value / y, self.unit)
+                z = UnitVar(self.__value / y, self.__unit)
+        return z
 
     def __rdiv__(self, x):
-        if _is_number(x):
+        z = None
+        if self._is_number(x):
             if 0 == x:
                 raise ZeroDivisionError('Cannot divide constant by a UnitVar with a magnitude of zero')
             else:
-                return UnitVar(x / self.value, self.unit)
-
+                z = UnitVar(x / self.__value, self.__unit)
+        return z
