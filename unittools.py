@@ -84,6 +84,9 @@ class UnitVar(object):
     def __str__(self):
         return self.format(fmt='{0}{1}')
     
+    def copy(self):
+        return UnitVar(self.__value, self.__unit)
+        
     def format(self, fmt=None):
         if fmt == None: 
             fmt = '{0}{1}'
@@ -186,6 +189,16 @@ class UnitVar(object):
             z = UnitVar(x + self.value, self.__unit)
         return z
 
+    def __iadd__(self, y):
+        if self._is_number(y):
+            self.__value += y
+        elif self._is_UnitVar(y):
+            y = y.convert(self.__unit)
+            self.__value += y.value
+        else:
+            pass
+        return self
+
     def __sub__(self, y):
         z = None
         if self._is_number(y):
@@ -200,6 +213,16 @@ class UnitVar(object):
         if self._is_number(x):
             z = UnitVar(x - self.value, self.__unit)
         return z
+    
+    def __isub__(self, y):
+        if self._is_number(y):
+            self.__value -= y
+        elif self._is_UnitVar(y):
+            y = y.convert(self.__unit)
+            self.__value -= y.value
+        else:
+            pass
+        return self
 
     def __mul__(self, y):
         z = None
@@ -212,7 +235,14 @@ class UnitVar(object):
         if self._is_number(x):
             z = UnitVar(x * self.value, self.__unit)
         return z
-
+    
+    def __imul__(self, y):
+        if self._is_number(y):
+            self.__value *= y
+        else:
+            pass
+        return self
+    
     def __div__(self, y):
         z = None
         if self._is_number(y):
@@ -231,3 +261,13 @@ class UnitVar(object):
             else:
                 z = UnitVar(x / self.__value, self.__unit)
         return z
+
+    def __idiv__(self, y):
+        if self._is_number(y):
+            if 0 == y:
+                raise ZeroDivisionError('Cannot divide UnitVar by a constant value of zero')
+            else:
+                self.__value /= y
+        else:
+            pass
+        return self
