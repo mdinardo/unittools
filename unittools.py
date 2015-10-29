@@ -1,5 +1,11 @@
 from exceptions import TypeError, ZeroDivisionError
 
+# units
+MIL = 'mil'
+IN = 'in'
+MM = 'mm'
+CM = 'cm'
+
 # factors are in a from-to format
 FACTORS = {
     # mils conversion factors
