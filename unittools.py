@@ -1,10 +1,15 @@
 from exceptions import TypeError, ZeroDivisionError
 
-# units
+# length units
 MIL = 'mil'
 IN = 'in'
 MM = 'mm'
 CM = 'cm'
+
+# temperature units
+DEG_C = 'degC'
+DEG_F = 'degF'
+DEG_K = 'degK'
 
 class ConverterMapException(Exception):
     """
@@ -51,6 +56,24 @@ CONVERTER_MAP = {
         IN : (lambda x: x * (1 / 2.54)),
         MM : (lambda x: x * 10),
         CM : (lambda x: x * 1.0),
+    }
+
+    # conversion from degrees Celsius
+    DEG_C : {
+        DEG_F : (lambda x: x * (9.0/5.0) + 32.0),
+        DEG_K : (lambda x: x + 273.15),
+    }
+
+    # conversion from degrees Fahrenheit
+    DEG_F : {
+        DEG_C : (lambda x: (x - 32.0) * (5.0/9.0)),
+        DEG_K : (lambda x: (x - 32.0) * (5.0/9.0) + 273.15),
+    }
+
+    # conversion from degrees Kelvin
+    DEG_K : {
+        DEG_C : (lambda x: x - 273.15),
+        DEG_F : (lambda x: (x - 273.15) * (9.0/5.0) + 32.0),
     }
 }
 
