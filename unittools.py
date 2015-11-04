@@ -55,7 +55,65 @@ def cm(x = 1):
 ##########################################
 
 class UnitVar(object):
+    """
+    UnitVar
+
+    A class that enables mixed-unit arithmetic.
+
+    Arithmetic operations: 
+        - addition (add, radd, iadd)
+        - subtraction (sub, rsub, isub)
+        - multiplication (mul, rmul, imul)
+        - division (div, rdiv, idiv)
     
+    Arithmetic rules:
+        (*) Unless otherwise specified, mixed-unit arithemtic requires that
+        a converter exists between the two units.  If a required converter
+        does not exist, a ConverterMapException is raised.
+
+        Addition
+            1.) (scalar) + (UnitVar_A)
+                Produces a UnitVar with a value of (scalar + UnitVar_A.value)
+                and the unit of UnitVar_A
+            2.) (UnitVar_A) + (UnitVar_B)   (same units)
+                Produces a UnitVar with the value of 
+                    (UnitVar_A.value + UnitVar_B.value)
+                and the unit is conserved.
+            3.) (UnitVar_A) + (UnitVar_B)   (mixed units)
+                UnitVar_B is converted to the unit of UnitVar_A,
+                and then case 2.) is applied.
+                The result is in the same unit as UnitVar_A.
+
+        Subtraction
+            1.) (scalar) - (UnitVar_A)
+                Produces a UnitVar with a value of (scalar - UnitVar_A.value)
+                and the unit of UnitVar_A.
+            2.) (UnitVar_A) - (UnitVar_B)   (same units)
+                Produces a UnitVar with the value of 
+                    (UnitVar_A.value - UnitVar_B.value)
+                and the unit is conserved.
+            3.) (UnitVar_A) - (UnitVar_B)   (mixed units)
+                UnitVar_B is converted to the unit of UnitVar_A,
+                and then case 2.) is applied.
+                The result is in the same unit as UnitVar_A.
+
+        Multiplication
+            1.) (scalar) * (UnitVar_A)
+                Produces a UnitVar with a value of (scalar * UnitVar_A.value)
+                and the unit of UnitVar_A.
+            2.) (UnitVar_A) * (UnitVar_B)
+                Operation not permitted.
+
+        Division
+            1.) (scalar) / (UnitVar_A)
+                Produces a UnitVar with a value of (scalar / UnitVar_A.value)
+                and the unit of UnitVar_A.
+            2.) (UnitVar_A) / (scalar)
+                Produces a UnitVar with a value of (UnitVar_A.value / scalar)
+                and the unit of UnitVar_A.
+            3.) (UnitVar_A) / (UnitVar_B) 
+                Operation not permitted.
+    """
     def __init__(self, value, unit):
         if _is_number(value):
             self.value = float(value)
