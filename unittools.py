@@ -6,37 +6,72 @@ IN = 'in'
 MM = 'mm'
 CM = 'cm'
 
-# factors are in a from-to format
-FACTORS = {
-    # mils conversion factors
+class ConverterMapException(Exception):
+    """
+    ConverterException
+
+    This exception is raised if a conversion between
+    two units does not exist in the converters map
+    """
+    def __init__(self, message, from_unit, to_unit=None):
+        super(ConverterMapException, self).__init__(message)
+        self.message = message
+        self.from_unit = from_unit
+        self.to_unit = to_unit
+
+########################################
+
+# converters are in a from-to format
+CONVERTER_MAP = {
+
+    # conversion from mils
     MIL : {
-        IN : 0.001,
-        MM : 0.0254,
-        CM : 0.00254,
-        MIL : 1.0,
+        IN : (lambda x: x * 0.001),
+        MM : (lambda x: x * 0.0254),
+        CM : (lambda x: x * 0.00254),
+        MIL : (lambda x: x * 1.0),
     } ,
-    # inch conversion factors
+    # conversion from inches
     IN : {
-        MIL : 1000,
-        MM : 25.4,
-        CM : 2.54,
-        IN : 1.0,
+        MIL : (lambda x: x * 1000),
+        MM : (lambda x: x * 25.4),
+        CM : (lambda x: x * 2.54),
+        IN : (lambda x: x * 1.0),
     } ,
-    # millimeter conversion factors
+    # conversion from millimeters
     MM : {
-        MIL : (1 / 0.0254),
-        IN : (1 / 25.4),
-        CM : 0.1,
-        MM : 1.0,
+        MIL : (lambda x: x * (1 / 0.0254)),
+        IN : (lambda x: x * (1 / 25.4)),
+        CM : (lambda x: x * 0.1),
+        MM : (lambda x: x * 1.0),
     } ,
-    # centimeter conversion factors
+    # conversion from centimeters
     CM : {
-        MIL : (1 / 0.00254),
-        IN : (1 / 2.54),
-        MM : 10,
-        CM : 1.0,
+        MIL : (lambda x: x * (1 / 0.00254)),
+        IN : (lambda x: x * (1 / 2.54)),
+        MM : (lambda x: x * 10),
+        CM : (lambda x: x * 1.0),
     }
 }
+
+def __get_converter(from_unit, to_unit):
+    unit_map = CONVERTER_MAP.get(from_unit, None)
+    
+    if None == unit_map:
+        # 1.) Throw a KeyError? 2.) exit function
+        raise ConverterMapException(
+                'Unit not convertable.',
+                from_unit )
+    
+    converter = unit_map.get(to_unit, None)
+
+    if None == converter:
+        raise ConverterMapException(
+                'Converter missing.',
+                from_unit,
+                to_unit)
+    
+    return converter
 
 #########################################
 
@@ -158,14 +193,16 @@ class UnitVar(object):
     def _is_UnitVar(u):
         return isinstance(u, UnitVar)
 
-    """
-    Transforms this UnitVar instance into the specified unit 'to_unit'
-
-    This instance is returned to enable method chaining.
-    """
     def _transform(self, to_unit):
-        self.value = self.__value * FACTORS[ self.__unit ][ to_unit ]
-        self.__unit = to_unit
+        """
+        Transforms this UnitVar instance into the specified unit 'to_unit'
+
+        This instance is returned to enable method chaining.
+        """
+        if to_unit != self.__unit
+            converter = __get_converter(self.__unit, to_unit)
+            self.__value = converter(self.__value)
+            self.__unit = to_unit
         return self
 
     def to_mil(self):
